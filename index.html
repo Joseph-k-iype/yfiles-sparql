@@ -1,0 +1,95 @@
+<!-- <!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.svg">
+
+  <title>Groups</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="header">
+        <div class="title">Groups</div>
+        <div class="toolbar">
+          <button id="btn-increase-zoom" title="Increase Zoom" class="demo-icon-yIconZoomIn"></button>
+          <button id="btn-decrease-zoom" title="Decrease Zoom" class="demo-icon-yIconZoomOut"></button>
+          <button id="btn-fit-graph" title="Fit Graph Bounds" class="demo-icon-yIconZoomFit"></button>
+          <span class="separator"></span>
+          <button id="btn-export-svg" title="Export as SVG">SVG</button>
+          <button id="btn-export-png" title="Export as PNG">PNG</button>
+          <button id="btn-export-pdf" title="Export as PDF">PDF</button>
+          <span class="spacer"></span>
+          <input id="graph-search-input" class="graph-search" placeholder="Search Nodes" />
+        </div>
+      </div>
+      <div class="main">
+        <div class="graph-component-container"></div>
+        <div class="graph-overview-container">
+          <div class="title">Overview</div>
+          <div id="graph-overview-component"></div>
+        </div>
+      </div>
+      <div style="position: absolute; bottom: 20px; right: 15px;">
+        <a href="https://yworks.com" target="_blank" style="margin: 10px;">
+          <img src="/src/assets/yWorksLogo.png" alt="yWorks Logo" style="height: 50px; width: 50px;">
+        </a>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html> -->
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.svg">
+    <!-- Include Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Groups</title>
+  </head>
+  <body>
+    <div id="app" class="container-fluid">
+      <div class="header">
+        <div class="title">Groups</div>
+        <div class="toolbar d-flex align-items-center">
+          <button id="btn-increase-zoom" title="Increase Zoom" class="demo-icon-yIconZoomIn btn btn-outline-primary"></button>
+          <button id="btn-decrease-zoom" title="Decrease Zoom" class="demo-icon-yIconZoomOut btn btn-outline-primary"></button>
+          <button id="btn-fit-graph" title="Fit Graph Bounds" class="demo-icon-yIconZoomFit btn btn-outline-primary"></button>
+          <span class="separator mx-2"></span>
+          <button id="btn-export-svg" title="Export as SVG" class="btn btn-secondary">SVG</button>
+          <button id="btn-export-png" title="Export as PNG" class="btn btn-secondary">PNG</button>
+          <button id="btn-export-pdf" title="Export as PDF" class="btn btn-secondary">PDF</button>
+          <span class="spacer mx-2"></span>
+          <input id="graph-search-input" class="graph-search form-control" placeholder="Search Nodes" />
+          <div class="input-group mx-2">
+            <input id="nodesQuery" type="text" class="form-control" placeholder="Nodes Query">
+          </div>
+          <div class="input-group mx-2">
+            <input id="edgesQuery" type="text" class="form-control" placeholder="Edges Query">
+          </div>
+          <div class="input-group mx-2">
+            <input id="groupsQuery" type="text" class="form-control" placeholder="Groups Query">
+          </div>
+          <button id="submitQueries" class="btn btn-primary">Submit Queries</button>
+        </div>
+      </div>
+      <div class="main">
+        <div class="graph-component-container"></div>
+        <div class="graph-overview-container">
+          <div class="title">Overview</div>
+          <div id="graph-overview-component"></div>
+        </div>
+      </div>
+      <div style="position: absolute; bottom: 20px; right: 15px;">
+        <a href="https://yworks.com" target="_blank" style="margin: 10px;">
+          <img src="/src/assets/yWorksLogo.png" alt="yWorks Logo" style="height: 50px; width: 50px;">
+        </a>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
