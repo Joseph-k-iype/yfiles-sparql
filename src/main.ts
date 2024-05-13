@@ -1,143 +1,3 @@
-// import './assets/icons/icons.css';
-// import './style.css';
-// import './dialog.css';
-// import {
-//   GraphComponent,
-//   GraphViewerInputMode,
-//   ICommand,
-//   ScrollBarVisibility,
-//   ShapeNodeStyle,
-//   Point,
-//   Size,
-//   INode,
-//   PolylineEdgeStyle,
-//   Arrow,
-//   Rect,
-//   IEnumerableConvertible
-// } from 'yfiles';
-// import { enableFolding } from './lib/FoldingSupport';
-// import loadGraph from './lib/loadGraph';
-// import './lib/yFilesLicense';
-// import { initializeGraphOverview } from './graph-overview';
-// import { initializeTooltips } from './tooltips';
-// import { exportDiagram } from './diagram-export';
-// import { initializeContextMenu } from './context-menu';
-// import { initializeGraphSearch } from './graph-search';
-
-// document.addEventListener('DOMContentLoaded', async () => {
-//   const graphComponent = await initializeGraphComponent();
-//   initializeToolbar(graphComponent);
-//   addQuerySubmissionListener(graphComponent);
-// });
-
-// async function initializeGraphComponent(): Promise<GraphComponent> {
-//   const graphComponent = new GraphComponent(document.querySelector('.graph-component-container')!);
-//   graphComponent.inputMode = new GraphViewerInputMode();
-//   graphComponent.graph = enableFolding(await loadGraph());
-//   graphComponent.fitGraphBounds();
-//   return graphComponent;
-// }
-
-// function initializeToolbar(graphComponent: GraphComponent) {
-//   document.getElementById('btn-increase-zoom')!.addEventListener('click', () => {
-//     ICommand.INCREASE_ZOOM.execute(null, graphComponent);
-//   });
-//   document.getElementById('btn-decrease-zoom')!.addEventListener('click', () => {
-//     ICommand.DECREASE_ZOOM.execute(null, graphComponent);
-//   });
-//   document.getElementById('btn-fit-graph')!.addEventListener('click', () => {
-//     ICommand.FIT_GRAPH_BOUNDS.execute(null, graphComponent);
-//   });
-// }
-
-// function addQuerySubmissionListener(graphComponent: GraphComponent) {
-//   document.getElementById('submitQueries')!.addEventListener('click', () => {
-//     const nodesQuery = (document.getElementById('nodesQuery') as HTMLInputElement).value;
-//     const edgesQuery = (document.getElementById('edgesQuery') as HTMLInputElement).value;
-//     const groupsQuery = (document.getElementById('groupsQuery') as HTMLInputElement).value;
-//     fetch('http://localhost:8000/query', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify({ nodesQuery, edgesQuery, groupsQuery })
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//       applyGraphData(graphComponent, data);
-//     })
-//     .catch(error => console.error('Error:', error));
-//   });
-// }
-
-// function applyGraphData(graphComponent: GraphComponent, data: { nodes: any[], edges: any[], groups: any[] }) {
-//   const graph = graphComponent.graph;
-//   graph.clear();
-
-//   const nodesMap = new Map<string, INode>();
-//   const typeToGroupNodeMap = new Map<string, INode>();
-
-//   // Create nodes
-//   data.nodes.forEach(node => {
-//     const newNode = graph.createNode({
-//       layout: new Rect(new Point(Math.random() * 800, Math.random() * 500), new Size(50, 30)),
-//       style: new ShapeNodeStyle({
-//         fill: 'lightblue',
-//         stroke: 'black',
-//         shape: 'rectangle'
-//       }),
-//       tag: node.id
-//     });
-//     graph.addLabel(newNode, node.label); // Adding labels to the nodes
-//     nodesMap.set(node.id, newNode);
-//   });
-
-//   // Create edges
-//   data.edges.forEach(edge => {
-//     const sourceNode = nodesMap.get(edge.source);
-//     const targetNode = nodesMap.get(edge.target);
-//     if (sourceNode && targetNode) {
-//       graph.createEdge(sourceNode, targetNode, new PolylineEdgeStyle({
-//         stroke: '2px solid black',
-//         targetArrow: new Arrow({ type: 'triangle', fill: 'black' })
-//       }));
-//     }
-//   });
-
-//   // Prepare group nodes based on types and prepare to group nodes
-//   data.groups.forEach(group => {
-//     // Create or get the existing group node for the type
-//     if (!typeToGroupNodeMap.has(group.type)) {
-//       const groupNode = graph.createGroupNode({
-//         layout: new Rect(0, 0, 300, 200), // Give some initial size
-//         style: new ShapeNodeStyle({
-//           fill: 'lightgray',
-//           stroke: 'black'
-//         }),
-//         labels: [group.type]
-//       });
-//       typeToGroupNodeMap.set(group.type, groupNode);
-//     }
-//   });
-
-//   // Assign nodes to the respective group nodes
-//   data.nodes.forEach(node => {
-//     const groupType = data.groups.find(g => g.id === node.id)?.type;
-//     if (groupType) {
-//       const groupNode = typeToGroupNodeMap.get(groupType);
-//       if (groupNode) {
-//         const individualNode = nodesMap.get(node.id);
-//         if (individualNode) {
-//           graph.setParent(individualNode, groupNode);
-//         }
-//       }
-//     }
-//   });
-
-//   // Fit the graph to ensure all elements are visible
-//   graphComponent.fitGraphBounds();
-// }
-
 import './assets/icons/icons.css'
 import './style.css'
 import './dialog.css'
@@ -161,15 +21,30 @@ import {
   Stroke,
   CircularLayout,
   OrganicLayout,
-  OrthogonalLayout
+  OrthogonalLayout,
+  IGraph,
+  GraphItemTypes
 } from 'yfiles'
 import { enableFolding } from './lib/FoldingSupport'
 import './lib/yFilesLicense'
 import { initializeGraphOverview } from './graph-overview'
-import { initializeTooltips } from './tooltips'
+// import { initializeTooltips } from './tooltips'
 import { exportDiagram } from './diagram-export'
 import { initializeContextMenu } from './context-menu'
 import { initializeGraphSearch } from './graph-search'
+
+
+const FIXED_NODE_SIZE = new Size(60, 40);  // Adjust these values as needed
+
+const nodeTypeColors: { [type: string]: string } = {
+  'type1': '#FFD700',  // Gold
+  'type2': '#DC143C',  // Crimson
+  'type3': '#00BFFF',  // Deep Sky Blue
+  'type4': '#32CD32',  // Lime Green
+  'default': '#808080'  // Grey for unspecified types
+};
+
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   const graphComponent = await initializeGraphComponent()
@@ -195,19 +70,34 @@ async function initializeGraphComponent(): Promise<GraphComponent> {
   return graphComponent
 }
 
+function initializeTooltips(graphComponent: GraphComponent) {
+  const inputMode = graphComponent.inputMode as GraphViewerInputMode;
+  inputMode.toolTipItems = GraphItemTypes.NODE;  // Enable tooltips for nodes
+  inputMode.addQueryItemToolTipListener((sender, args) => {
+    if (INode.isInstance(args.item)) {
+      const node = args.item as INode;
+      if (node.labels.size > 0) {
+        args.toolTip = node.labels.first().text;
+        args.handled = true;
+      }
+    }
+  });
+  inputMode.mouseHoverInputMode.enabled = true;
+}
+
 function initializeToolbar(graphComponent: GraphComponent) {
-  const layoutDropdown = document.querySelector('.dropdown-menu');
+  const layoutDropdown = document.querySelector('.dropdown-menu')
   if (layoutDropdown) {
-    layoutDropdown.addEventListener('click', function(event) {
+    layoutDropdown.addEventListener('click', function (event) {
       // Ensure that the event target is an HTMLElement to access HTMLElement-specific properties
-      const target = event.target as HTMLElement;
+      const target = event.target as HTMLElement
       if (target && target.tagName === 'A') {
-        const layoutType = target.getAttribute('data-layout');
+        const layoutType = target.getAttribute('data-layout')
         if (layoutType) {
-          applyLayout(graphComponent, layoutType);
+          applyLayout(graphComponent, layoutType)
         }
       }
-    });
+    })
   }
 
   document.getElementById('btn-increase-zoom')!.addEventListener('click', () => {
@@ -248,44 +138,76 @@ function addQuerySubmissionListener(graphComponent: GraphComponent) {
 }
 
 function applyLayout(graphComponent: GraphComponent, layoutType: any) {
-  let layout;
+  let layout
   switch (layoutType) {
     case 'hierarchic':
-      layout = new HierarchicLayout();
-      break;
+      layout = new HierarchicLayout()
+      break
     case 'organic':
-      layout = new OrganicLayout();
-      break;
+      layout = new OrganicLayout()
+      break
     case 'orthogonal':
-      layout = new OrthogonalLayout();
-      break;
+      layout = new OrthogonalLayout()
+      break
     case 'circular':
-      layout = new CircularLayout();
-      break;
+      layout = new CircularLayout()
+      break
     default:
-      layout = new HierarchicLayout();
+      layout = new HierarchicLayout()
   }
   const executor = new LayoutExecutor({
     graphComponent,
     layout,
-    duration: 500  // Duration in milliseconds
-  });
-  executor.start().catch(error => console.error('Layout execution failed:', error));
+    duration: 500 // Duration in milliseconds
+  })
+  executor.start().catch((error) => console.error('Layout execution failed:', error))
 }
 
+function applyGraphData(graphComponent: GraphComponent, data: { nodes: any[]; edges: any[]; groups?: any[] }) {
+  const graph = graphComponent.graph;
+  graph.clear();
 
-function applyGraphData(
-  graphComponent: GraphComponent,
-  data: { nodes: any[]; edges: any[]; groups: any[] }
-) {
-  const graph = graphComponent.graph
-  graph.clear()
+  const nodesMap = new Map<string, INode>();
+  let typeToGroupMap = new Map<string, INode>();
 
-  const nodesMap = new Map<string, INode>()
-  const typeToGroupMap = new Map<string, INode>()
+  if (data.groups && data.groups.length > 0) {
+    typeToGroupMap = createGroups(graph, data.groups);
+  }
 
-  // Create one group node per type
-  data.groups.forEach((group) => {
+  data.nodes.forEach((node) => {
+    const groupNode = node.type ? typeToGroupMap.get(node.type) : null;
+    const color = nodeTypeColors[node.type] || nodeTypeColors['default'];  // Use color based on type, or default if type is unknown
+
+    const newNode = graph.createNode({
+      layout: new Rect(new Point(Math.random() * 800, Math.random() * 500), FIXED_NODE_SIZE),
+      style: new ShapeNodeStyle({
+        fill: color,  // Set fill color based on node type
+        stroke: 'black',
+        shape: 'rectangle'
+      }),
+      labels: [node.label]
+    });
+
+    if (groupNode) {
+      graph.setParent(newNode, groupNode);
+    }
+
+    nodesMap.set(node.id, newNode);
+  });
+
+  createEdges(graph, data.edges, nodesMap);
+
+  if (typeToGroupMap.size > 0) {
+    adjustGroupNodes(graph);
+  }
+
+  graphComponent.fitGraphBounds();
+}
+
+// Helper function to create group nodes based on group data
+function createGroups(graph: IGraph, groups: any[]) {
+  const typeToGroupMap = new Map()
+  groups.forEach((group: { type: any }) => {
     if (!typeToGroupMap.has(group.type)) {
       const groupNodeStyle = new GroupNodeStyle({
         tabPosition: 'top-leading',
@@ -295,7 +217,6 @@ function applyGraphData(
         tabHeight: 24,
         tabWidth: 100
       })
-
       const groupNode = graph.createGroupNode({
         layout: new Rect(0, 0, 500, 300),
         style: groupNodeStyle
@@ -304,30 +225,16 @@ function applyGraphData(
       typeToGroupMap.set(group.type, groupNode)
     }
   })
+  return typeToGroupMap
+}
 
-  // Assign nodes to the group based on their type
-  data.nodes.forEach((node) => {
-    const groupNode = typeToGroupMap.get(node.type)
-    const nodeSize = new Size(Math.random() * 50 + 30, Math.random() * 30 + 20)
-    const newNode = graph.createNode(
-      groupNode,
-      new Rect(new Point(Math.random() * 800, Math.random() * 500), nodeSize),
-      new ShapeNodeStyle({
-        fill: 'lightblue',
-        stroke: 'black',
-        shape: 'rectangle'
-      })
-    )
-    graph.addLabel(newNode, node.label)
-    nodesMap.set(node.id, newNode)
-  })
-
-  // Create edges
-  data.edges.forEach((edge) => {
+// Function to create edges between nodes
+function createEdges(graph: IGraph, edges: any[], nodesMap: Map<string, INode>) {
+  edges.forEach((edge: { source: any; target: any }) => {
     const sourceNode = nodesMap.get(edge.source)
     const targetNode = nodesMap.get(edge.target)
     if (sourceNode && targetNode) {
-      const newEdge = graph.createEdge(
+      graph.createEdge(
         sourceNode,
         targetNode,
         new PolylineEdgeStyle({
@@ -337,14 +244,13 @@ function applyGraphData(
       )
     }
   })
+}
 
-  // Adjust group nodes to enclose their children properly
+// Function to adjust group nodes layout
+function adjustGroupNodes(graph: IGraph) {
   graph.nodes
-    .filter((node) => graph.isGroupNode(node))
-    .forEach((groupNode) => {
+    .filter((node: any) => graph.isGroupNode(node))
+    .forEach((groupNode: any) => {
       graph.adjustGroupNodeLayout(groupNode)
     })
-
-  // Fit the graph to ensure all elements are visible
-  graphComponent.fitGraphBounds()
 }
