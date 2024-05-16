@@ -5,7 +5,6 @@ import {
   GraphComponent,
   GraphViewerInputMode,
   ICommand,
-  ScrollBarVisibility,
   ShapeNodeStyle,
   Point,
   Size,
@@ -14,7 +13,6 @@ import {
   Arrow,
   Rect,
   HierarchicLayout,
-  IMapper,
   LayoutExecutor,
   GroupNodeStyle,
   InteriorLabelModel,
@@ -23,31 +21,47 @@ import {
   CircularLayout,
   OrganicLayout,
   OrthogonalLayout,
-  IGraph,
   GraphItemTypes,
-  ShortestPathAlgorithm,
-  ShortestPath,
-  DefaultGraph,
+  DefaultLabelStyle,
   BetweennessCentrality,
+  IGraph,
   LouvainModularityClustering,
-  SimpleNode
+  ShortestPath,
+  IEdge
 } from 'yfiles'
 import { enableFolding } from './lib/FoldingSupport'
 import './lib/yFilesLicense'
 import { initializeGraphOverview } from './graph-overview'
-// import { initializeTooltips } from './tooltips'
 import { exportDiagram } from './diagram-export'
 import { initializeContextMenu } from './context-menu'
 import { initializeGraphSearch } from './graph-search'
 
 const FIXED_NODE_SIZE = new Size(60, 40) // Adjust these values as needed
 
-const nodeTypeColors: { [type: string]: string } = {
-  type1: '#FFD700', // Gold
-  type2: '#DC143C', // Crimson
-  type3: '#00BFFF', // Deep Sky Blue
-  type4: '#32CD32', // Lime Green
-  default: '#808080' // Grey for unspecified types
+// Define a palette of colors
+const colorPalette = [
+  '#FFD700', // Gold
+  '#00BFFF', // Deep Sky Blue
+  '#DC143C', // Crimson
+  '#32CD32', // Lime Green
+  '#FF69B4', // Hot Pink
+  '#8A2BE2', // Blue Violet
+  '#FF8C00', // Dark Orange
+  '#7FFF00', // Chartreuse
+  '#D2691E', // Chocolate
+  '#6495ED', // Cornflower Blue
+  '#808080'  // Grey for unspecified types
+]
+
+const nodeTypeColors = new Map<string, string>()
+
+// Function to assign colors dynamically to node types
+function getNodeColor(nodeType: string): string {
+  if (!nodeTypeColors.has(nodeType)) {
+    const color = colorPalette[nodeTypeColors.size % colorPalette.length]
+    nodeTypeColors.set(nodeType, color)
+  }
+  return nodeTypeColors.get(nodeType) || '#808080' // Default to grey if not found
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -57,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initializeGraphOverview(graphComponent)
   initializeContextMenu(graphComponent)
   initializeGraphSearch(graphComponent)
+  initializeSidebar(graphComponent) // Initialize the sidebar for subgraph feature
   exportDiagram(graphComponent, 'svg')
   exportDiagram(graphComponent, 'png')
   exportDiagram(graphComponent, 'pdf')
@@ -73,6 +88,7 @@ async function initializeGraphComponent(): Promise<GraphComponent> {
     }
   })
   graphComponent.inputMode = inputMode
+  initializeTooltips(graphComponent)
   await loadGraph(graphComponent)
   graphComponent.fitGraphBounds()
   return graphComponent
@@ -146,7 +162,6 @@ function initializeToolbar(graphComponent: GraphComponent) {
   });
 }
 
-
 async function loadGraph(graphComponent: GraphComponent) {
   const graph = graphComponent.graph
   graph.clear()
@@ -168,6 +183,7 @@ function addQuerySubmissionListener(graphComponent: GraphComponent) {
       .then((response) => response.json())
       .then((data) => {
         applyGraphData(graphComponent, data)
+        populateNodeList(graphComponent) // Populate the node list after loading the graph
       })
       .catch((error) => console.error('Error:', error))
   })
@@ -215,22 +231,29 @@ function applyGraphData(
 
   data.nodes.forEach((node) => {
     const groupNode = node.type ? typeToGroupMap.get(node.type) : null
-    const color = nodeTypeColors[node.type] || nodeTypeColors['default'] // Use color based on type, or default if type is unknown
+    const color = getNodeColor(node.type) // Use dynamic color assignment
 
     const newNode = graph.createNode({
-      layout: new Rect(new Point(Math.random() * 800, Math.random() * 500), FIXED_NODE_SIZE),
+      layout: new Rect(new Point(Math.random() * 800, Math.random() * 800), FIXED_NODE_SIZE), // Position randomly
       style: new ShapeNodeStyle({
-        fill: color, // Set fill color based on node type
-        stroke: 'black',
-        shape: 'rectangle'
+        fill: new SolidColorFill(color),
+        stroke: new Stroke('black', 1.5)
       }),
-      labels: [node.label]
+      labels: [{
+        text: node.label || node.id,
+        style: new DefaultLabelStyle({
+          wrapping: 'character-ellipsis', // Truncate text with ellipsis
+          horizontalTextAlignment: 'center',
+          verticalTextAlignment: 'center',
+          textSize: 12,
+          font: 'Arial'
+        }),
+        preferredSize: new Size(FIXED_NODE_SIZE.width - 10, FIXED_NODE_SIZE.height - 10) // Adjust size to fit within node
+      }]
     })
-
     if (groupNode) {
       graph.setParent(newNode, groupNode)
     }
-
     nodesMap.set(node.id, newNode)
   })
 
@@ -390,11 +413,11 @@ function performModularityClustering(graphComponent: GraphComponent) {
   const result = clustering.run(graph);
 
   // Check if nodeClusterIds is iterable like a Map
-  if (result.nodeClusterIds.forEach) {
-    // Assuming nodeClusterIds behaves like a Map<INode, number>
-    result.nodeClusterIds.forEach((node, clusterId) => {
-      // Ensure 'node' is actually an INode and that 'clusterId' is the number
-      if (node instanceof INode) {
+  if (result.nodeClusterIds) {
+    result.nodeClusterIds.forEach(entry => {
+      const node = entry.key;
+      const clusterId = entry.value;
+      if (INode.isInstance(node)) {
         console.log(`Node ${node.tag} is in cluster ${clusterId}`);
         const nodeStyle = node.style.clone() as ShapeNodeStyle;
         nodeStyle.fill = getClusterColor(clusterId);
@@ -410,7 +433,6 @@ function performModularityClustering(graphComponent: GraphComponent) {
   graphComponent.invalidate(); // Redraw the graph with new styles
 }
 
-
 function getCentralityColor(value: number): SolidColorFill {
   const intensity = Math.min(value * 255, 255);
   return new SolidColorFill(255, intensity, intensity);
@@ -419,4 +441,103 @@ function getCentralityColor(value: number): SolidColorFill {
 function getClusterColor(clusterId: number): SolidColorFill {
   const colors = ['red', 'green', 'blue', 'yellow', 'purple'];
   return new SolidColorFill(colors[clusterId % colors.length]);
+}
+
+// Sidebar initialization
+function initializeSidebar(graphComponent: GraphComponent) {
+  const searchInput = document.getElementById('node-search') as HTMLInputElement
+  const nodeList = document.getElementById('node-list') as HTMLElement
+  searchInput.addEventListener('input', () => {
+    filterNodes(graphComponent, searchInput.value, nodeList)
+  })
+
+  const generateSubgraphButton = document.getElementById('generate-subgraph') as HTMLButtonElement
+  generateSubgraphButton.addEventListener('click', () => {
+    generateSubgraph(graphComponent, nodeList)
+  })
+}
+
+function populateNodeList(graphComponent: GraphComponent) {
+  const nodeList = document.getElementById('node-list') as HTMLElement
+  nodeList.innerHTML = ''
+  graphComponent.graph.nodes.forEach((node) => {
+    const listItem = document.createElement('div')
+    listItem.className = 'list-group-item'
+    listItem.innerHTML = `
+      <input type="checkbox" class="node-checkbox" data-node-id="${node.tag}">
+      <span>${node.labels.size > 0 ? node.labels.first().text : ''}</span>
+    `
+    nodeList.appendChild(listItem)
+  })
+}
+
+function filterNodes(graphComponent: GraphComponent, searchTerm: string, nodeList: HTMLElement) {
+  const items = nodeList.querySelectorAll('.list-group-item')
+  items.forEach((item) => {
+    const listItem = item as HTMLElement // Cast item to HTMLElement
+    const nodeName = listItem.querySelector('span')?.textContent || ''
+    const matches = nodeName.toLowerCase().includes(searchTerm.toLowerCase())
+    listItem.style.display = matches ? '' : 'none'
+  })
+}
+
+function generateSubgraph(graphComponent: GraphComponent, nodeList: HTMLElement) {
+  const selectedNodeIds: string[] = []
+  const checkboxes = nodeList.querySelectorAll('.node-checkbox')
+  checkboxes.forEach((checkbox) => {
+    if ((checkbox as HTMLInputElement).checked) {
+      const nodeId = (checkbox as HTMLInputElement).dataset.nodeId
+      if (nodeId) {
+        selectedNodeIds.push(nodeId)
+      }
+    }
+  })
+
+  const subgraph = createSubgraph(graphComponent.graph, selectedNodeIds)
+  displaySubgraph(subgraph, graphComponent)
+}
+
+function createSubgraph(graph: IGraph, selectedNodeIds: string[]): IGraph {
+  const subgraph = new GraphComponent().graph
+  const nodeMap = new Map<INode, INode>()
+
+  selectedNodeIds.forEach((nodeId) => {
+    const node = graph.nodes.find((n) => n.tag === nodeId)
+    if (node) {
+      const newNode = subgraph.createNode({
+        layout: node.layout.toRect(),
+        style: node.style,
+        labels: node.labels.toArray().map(label => ({ text: label.text })) // Ensure correct label format
+      })
+      nodeMap.set(node, newNode)
+    }
+  })
+
+  graph.edges.forEach((edge) => {
+    const sourceNode = nodeMap.get(edge.sourceNode?.tag) as INode | undefined
+    const targetNode = nodeMap.get(edge.targetNode?.tag) as INode | undefined
+    if (sourceNode && targetNode) {
+      subgraph.createEdge({
+        source: sourceNode,
+        target: targetNode,
+        style: edge.style
+      })
+    }
+  })
+
+  return subgraph
+}
+
+function displaySubgraph(subgraph: IGraph, graphComponent: GraphComponent) {
+  const subgraphComponent = new GraphComponent()
+  subgraphComponent.graph = subgraph
+  subgraphComponent.fitGraphBounds()
+
+  const subgraphWindow = window.open('', '_blank', 'width=800,height=600')
+  if (subgraphWindow) {
+    subgraphWindow.document.write('<html><head><title>Subgraph</title></head><body></body></html>')
+    subgraphWindow.document.body.appendChild(subgraphComponent.div)
+    subgraphComponent.div.style.height = '100%'
+    subgraphComponent.div.style.width = '100%'
+  }
 }

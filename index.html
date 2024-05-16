@@ -55,23 +55,29 @@
 
         <div class="offcanvas offcanvas-start show text-bg-dark" data-bs-scroll="true" data-bs-backdrop="true" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
           <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="offcanvasScrollingLabel">
-              <div>
-                <div class="input-group mx-2 mb-2">
-                  <input id="nodesQuery" type="text" class="form-control" placeholder="Nodes Query">
-                </div>
-                <div class="input-group mx-2 mb-2">
-                  <input id="edgesQuery" type="text" class="form-control" placeholder="Edges Query">
-                </div>
-                <div class="input-group mx-2 mb-2">
-                  <input id="groupsQuery" type="text" class="form-control" placeholder="Groups Query">
-                </div>
-                <div class="input-group mx-2 mb-2">
-                  <button id="submitQueries" class="btn btn-primary" type="button">Submit Queries</button>
-                </div>
-              </div>
-            </h5>
+            <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Graph Queries</h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <div class="input-group mx-2 mb-2">
+              <input id="nodesQuery" type="text" class="form-control" placeholder="Nodes Query">
+            </div>
+            <div class="input-group mx-2 mb-2">
+              <input id="edgesQuery" type="text" class="form-control" placeholder="Edges Query">
+            </div>
+            <div class="input-group mx-2 mb-2">
+              <input id="groupsQuery" type="text" class="form-control" placeholder="Groups Query">
+            </div>
+            <div class="input-group mx-2 mb-2">
+              <button id="submitQueries" class="btn btn-primary" type="button">Submit Queries</button>
+            </div>
+            <div class="input-group mx-2 mb-2">
+              <input id="node-search" type="text" class="form-control" placeholder="Search Nodes">
+            </div>
+            <div id="node-list" class="list-group mx-2 mb-2"></div>
+            <div class="input-group mx-2 mb-2">
+              <button id="generate-subgraph" class="btn btn-primary" type="button">Generate Subgraph</button>
+            </div>
           </div>
         </div>
       </div>
