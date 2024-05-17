@@ -455,6 +455,22 @@ function initializeSidebar(graphComponent: GraphComponent) {
   generateSubgraphButton.addEventListener('click', () => {
     generateSubgraph(graphComponent, nodeList)
   })
+
+  // CSV Input
+  document.getElementById('submitCSVQueries')?.addEventListener('click', () => {
+    const nodesCSV = (document.getElementById('nodesCSV') as HTMLTextAreaElement).value
+    const edgesCSV = (document.getElementById('edgesCSV') as HTMLTextAreaElement).value
+    const groupsCSV = (document.getElementById('groupsCSV') as HTMLTextAreaElement).value
+    const data = parseCSV(nodesCSV, edgesCSV, groupsCSV)
+    applyGraphData(graphComponent, data)
+  })
+
+  // JSON Input
+  document.getElementById('submitJSONQueries')?.addEventListener('click', () => {
+    const jsonInput = (document.getElementById('jsonInput') as HTMLTextAreaElement).value
+    const data = JSON.parse(jsonInput)
+    applyGraphData(graphComponent, data)
+  })
 }
 
 function populateNodeList(graphComponent: GraphComponent) {
@@ -534,10 +550,47 @@ function displaySubgraph(subgraph: IGraph, graphComponent: GraphComponent) {
   subgraphComponent.fitGraphBounds()
 
   const subgraphWindow = window.open('', '_blank', 'width=800,height=600')
+
   if (subgraphWindow) {
-    subgraphWindow.document.write('<html><head><title>Subgraph</title></head><body></body></html>')
-    subgraphWindow.document.body.appendChild(subgraphComponent.div)
-    subgraphComponent.div.style.height = '100%'
-    subgraphComponent.div.style.width = '100%'
+    subgraphWindow.document.write(`
+      <html>
+        <head>
+          <title>Subgraph</title>
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/yfiles@2.4.0/dist/yfiles.css">
+        </head>
+        <body>
+          <div id="subgraph-container" style="width: 100%; height: 100%;"></div>
+        </body>
+      </html>
+    `)
+    subgraphWindow.document.body.style.margin = '0'
+    subgraphWindow.document.body.style.padding = '0'
+
+    subgraphWindow.onload = () => {
+      const container = subgraphWindow.document.getElementById('subgraph-container')
+      if (container) {
+        container.appendChild(subgraphComponent.div)
+        subgraphComponent.div.style.height = '100%'
+        subgraphComponent.div.style.width = '100%'
+        subgraphComponent.updateContentRect()
+        subgraphComponent.fitGraphBounds()
+      }
+    }
   }
+}
+
+// Handle CSV Input
+function parseCSV(nodesCSV: string, edgesCSV: string, groupsCSV: string): { nodes: any[], edges: any[], groups: any[] } {
+  const parseSection = (text: string): any[] => {
+    return text.trim().split('\n').map(row => {
+      const columns = row.split(',')
+      return { id: columns[0], label: columns[1], type: columns[2] }
+    })
+  }
+
+  const nodes = parseSection(nodesCSV)
+  const edges = parseSection(edgesCSV)
+  const groups = parseSection(groupsCSV)
+
+  return { nodes, edges, groups }
 }
