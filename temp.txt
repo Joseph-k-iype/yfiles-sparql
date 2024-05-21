@@ -1,0 +1,20 @@
+def clean_data(column):
+    if isinstance(column, list):
+        return ', '.join(map(str, column)).replace("[", "").replace("]", "").replace("'", "")
+    if isinstance(column, str) and column.startswith('[') and column.endswith(']'):
+        column = column[1:-1]  # Remove brackets
+    return column
+
+# Apply the function to each column
+for column in df.columns:
+    df[column] = df[column].apply(clean_data)
+
+# Function to extract IDs from URLs
+def extract_id_from_url(data):
+    urls = re.findall(r"https?://[^\s]+", data)
+    ids = [url.split('/')[-1] for url in urls]
+    return ', '.join(ids)
+
+# Apply the function to primarydatacategory and secondarydatacategory columns
+df['primarydatacategory'] = df['primarydatacategory'].apply(lambda x: extract_id_from_url(x))
+df['secondarydatacategory'] = df['secondarydatacategory'].apply(lambda x: extract_id_from_url(x))
