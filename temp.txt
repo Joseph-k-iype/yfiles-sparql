@@ -12,9 +12,5 @@ for column in df.columns:
 # Function to extract IDs from URLs
 def extract_id_from_url(data):
     urls = re.findall(r"https?://[^\s]+", data)
-    ids = [url.split('/')[-1] for url in urls]
+    ids = [url.split('/')[-1].strip('),') for url in urls]
     return ', '.join(ids)
-
-# Apply the function to primarydatacategory and secondarydatacategory columns
-df['primarydatacategory'] = df['primarydatacategory'].apply(lambda x: extract_id_from_url(x))
-df['secondarydatacategory'] = df['secondarydatacategory'].apply(lambda x: extract_id_from_url(x))
