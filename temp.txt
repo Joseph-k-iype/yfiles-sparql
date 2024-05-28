@@ -1,3 +1,22 @@
+import pandas as pd
+import re
+
+# Mock data creation to match the provided input structure
+data = {
+    'pname': [['abc','def'], ['ghi']],
+    'ptype': [['abc','def'], ['ghi']],
+    'pdesc': [['abc','def'], ['ghi']],
+    'S-cdm': [[], ['abc','def']],
+    'primarydatacategory': [['https://www.abc.com/abc'], ['https://www.abc.com/abc']],
+    'secondarydatacategory': [["[rdflib.term.URIRef('https://www.abc.com/abc'), rdflib.term.URIRef('https://www.abc.com/def'),)]"], ["[rdflib.term.URIRef('https://www.abc.com/ghi'),)]"]],
+    'sendingemail': [['abc@ghi.com'], ['abc@ghi.com']],
+    'receivingemail': [['abc@ghi.com'], ['abc@ghi.com']]
+}
+
+# Convert the mock data into a DataFrame
+df = pd.DataFrame(data)
+
+# Function to clean and format the data
 def clean_data(column):
     if isinstance(column, list):
         return ', '.join(map(str, column)).replace("[", "").replace("]", "").replace("'", "")
@@ -11,6 +30,12 @@ for column in df.columns:
 
 # Function to extract IDs from URLs
 def extract_id_from_url(data):
-    urls = re.findall(r"https?://[^\s]+", data)
+    urls = re.findall(r"https?://[^\s,]+", data)
     ids = [url.split('/')[-1].replace(')', '').replace(',', '') for url in urls]
     return ', '.join(ids)
+
+# Apply the function to primarydatacategory and secondarydatacategory columns
+df['primarydatacategory'] = df['primarydatacategory'].apply(lambda x: extract_id_from_url(x))
+df['secondarydatacategory'] = df['secondarydatacategory'].apply(lambda x: extract_id_from_url(x))
+
+df
